@@ -2,9 +2,12 @@ import os
 import sys
 import streamlit as st
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Ensure the root directory is in the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Fix Python path so it can locate the 'src' module
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 # Load environment variables
 load_dotenv()
