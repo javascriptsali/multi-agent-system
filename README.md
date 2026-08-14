@@ -156,30 +156,30 @@ multi-agent-system/
 ```
 ### 💡 Key Architectural Lessons Learned
 
-- # Building production-grade Multi-Agent systems requires strict control boundaries:
+- **Building production-grade Multi-Agent systems requires strict control boundaries:**
 
-- # 1. Limit Tool Scope: Giving execution/analysis tools to code generation nodes often leads to infinite tool-calling loops. Restrict external tools solely to agents that require real-world data (e.g., Researcher).
+- **1. Limit Tool Scope: Giving execution/analysis tools to code generation nodes often leads to infinite tool-calling loops. Restrict external tools solely to agents that require real-world data (e.g., Researcher).**
 
-- # 2. Isolate State Variables: Avoid passing full raw chat history to all nodes. Storing individual state variables (researcher_output, coder_output) keeps downstream nodes focused.
+- **2. Isolate State Variables: Avoid passing full raw chat history to all nodes. Storing individual state variables (researcher_output, coder_output) keeps downstream nodes focused.**
 
-- # 3. Network Resilience: LLM APIs can drop connections under high loads (WinError 10054). Always configure timeouts and automatic retries at model instantiation:
+- **3. Network Resilience: LLM APIs can drop connections under high loads (WinError 10054). Always configure timeouts and automatic retries at model instantiation:**
 
 ```bash
 ChatGroq(model="llama-3.1-8b-instant", request_timeout=60.0, max_retries=3)
 ```
-## 🤝 Contributing
-- # Contributions are welcome! Please feel free to submit a Pull Request.
+# 🤝 Contributing
+- **Contributions are welcome! Please feel free to submit a Pull Request.**
 
-## 📝 License
+# 📝 License
 
-- This project is licensed under the MIT License — see the LICENSE file for details.
+- **This project is licensed under the MIT License — see the LICENSE file for details.**
 
-## 📧 Contact
+# 📧 Contact
 
-- # Saleh Bakhtiyari-[javascriptsali@gmail.com](javascriptsali@gmail.com)
-- # [Project Link]:(https://github.com/javascriptsali/multi-agent-system.git)
+- **Saleh Bakhtiyari-[javascriptsali@gmail.com](javascriptsali@gmail.com)**
+- **[Project Link]:(https://github.com/javascriptsali/multi-agent-system.git)**
 
-## ⭐ Support
+# ⭐ Support
 
 - **If you find this project useful, consider giving it a star!**
 - **Your support helps motivate me to create more open-source AI engineering projects.** 🚀
