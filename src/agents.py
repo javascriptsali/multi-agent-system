@@ -17,8 +17,8 @@ from tools import (
 load_dotenv()
 
 # Updated model names based on Groq recommendations
-PLANNER_MODEL = "gpt-oss-20b"
-AGENT_MODEL = "gpt-oss-20b"
+PLANNER_MODEL = "openai/gpt-oss-20b"
+AGENT_MODEL = "openai/gpt-oss-20b"
 
 
 def get_planner_llm() -> ChatGroq:
