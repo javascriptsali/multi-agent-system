@@ -190,3 +190,51 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     test_agent(args.test)
+
+# =========================================================
+# Wrapper Functions for Streamlit / External Calling
+# =========================================================
+
+
+def run_agent_test(agent_name: str, task: str) -> str:
+    """Executes a single agent test and returns the output as a string."""
+    if agent_name == "researcher":
+        from src.agents import researcher_node
+
+        state = {"messages": [("user", task)], "task": task}
+        result = researcher_node(state)
+        return result.get("researcher_output", "No output generated.")
+
+    elif agent_name == "coder":
+        from src.agents import coder_node
+
+        state = {"messages": [("user", task)], "task": task}
+        result = coder_node(state)
+        return result.get("coder_output", "No output generated.")
+
+    elif agent_name == "reviewer":
+        from src.agents import reviewer_node
+
+        state = {"messages": [("user", task)], "task": task}
+        result = reviewer_node(state)
+        return result.get("reviewer_output", "No output generated.")
+
+    return "Invalid agent name specified."
+
+
+def run_full_graph(task: str) -> dict:
+    """Executes the full LangGraph pipeline and returns the final state dict."""
+    # ۱. ابتدا گراف را می‌سازیم و در متغیر app می‌ریزیم
+    app = build_multi_agent_graph()
+
+    # ۲. وضعیت اولیه را تعریف می‌کنیم
+    initial_state = {
+        "task": task,
+        "plan": [],
+        "current_step": 0,
+        "messages": [("user", task)],
+    }
+
+    # ۳. گراف را اجرا می‌کنیم
+    final_state = app.invoke(initial_state)
+    return final_state
