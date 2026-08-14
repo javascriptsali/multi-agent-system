@@ -34,7 +34,7 @@ def get_agent_llm() -> ChatGroq:
     return ChatGroq(
         model=AGENT_MODEL,
         temperature=0.1,
-        max_tokens=1500,
+        max_tokens=3000,
         api_key=os.getenv("GROQ_API_KEY"),
     )
 
@@ -70,7 +70,7 @@ STRICT INSTRUCTIONS:
 RULES:
 - NEVER leave 'Summary of Best Practices' empty.
 - NEVER write Python code.
-- Maximum 3 sources."""
+- Maximum 2 sources."""
 
 CODER_PROMPT = """You are an Expert Python Developer.
 Your job is to write high-quality, executable Python code based strictly on the user's explicit request and research context.

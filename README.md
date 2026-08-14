@@ -11,7 +11,7 @@
 
 ## 🌟 Overview
 
-A robust, production-ready **Multi-Agent AI Pipeline** built with **LangGraph**, **Groq (Llama 3.1)**, and **DuckDuckGo Search**. The system uses a **Plan-and-Execute** architecture where an AI Planner dynamically breaks down tasks and delegates them to specialized agents (Researcher, Coder, and Reviewer) to produce high-quality, peer-reviewed python code.
+A robust, production-ready **Multi-Agent AI Pipeline** built with **LangGraph**, **Groq (openai/gpt-oss-20b)**, and **DuckDuckGo Search**. The system uses a **Plan-and-Execute** architecture where an AI Planner dynamically breaks down tasks and delegates them to specialized agents (Researcher, Coder, and Reviewer) to produce high-quality, peer-reviewed python code.
 
 ---
 
@@ -165,7 +165,7 @@ multi-agent-system/
 - **3. Network Resilience: LLM APIs can drop connections under high loads (WinError 10054). Always configure timeouts and automatic retries at model instantiation:**
 
 ```bash
-ChatGroq(model="llama-3.1-8b-instant", request_timeout=60.0, max_retries=3)
+ChatGroq(model="openai/gpt-oss-20b", request_timeout=60.0, max_retries=3)
 ```
 # 🤝 Contributing
 - **Contributions are welcome! Please feel free to submit a Pull Request.**
