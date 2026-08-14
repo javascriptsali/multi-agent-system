@@ -122,6 +122,8 @@ def create_reviewer_llm():
 # Planner Node
 # ==========================================
 
+import re
+
 def planner_node(state):
     llm = get_planner_llm()
     task = state.get("current_task") or state.get("task", "")
@@ -131,11 +133,20 @@ def planner_node(state):
         HumanMessage(content=f"Task: {task}"),
     ])
 
-    plan_text = str(response.content).strip().lower().replace(" ", "")
-    valid_agents = {"researcher", "coder", "reviewer"}
-    plan = [a for a in plan_text.split(",") if a in valid_agents]
+    plan_text = str(response.content).lower()
+    
+    # استخراج کلمات کلیدی با Regex (حتی اگر مدل فاصله یا کاراکتر اضافی داده باشد)
+    valid_agents = ["researcher", "coder", "reviewer"]
+    raw_found = re.findall(r"\b(researcher|coder|reviewer)\b", plan_text)
+    
+    # حذف موارد تکراری با حفظ ترتیب
+    plan = []
+    for agent in raw_found:
+        if agent not in plan:
+            plan.append(agent)
 
-    if not plan or len(plan) < 2:
+    # اگر مدل لیست ناقص داد (مثلاً کمتر از ۳ ایجنت) یا هیچ‌کدام را نیافت، لیست کامل را جایگزین کن
+    if len(plan) < 3:
         plan = ["researcher", "coder", "reviewer"]
 
     print(f"📋 Generated Plan: {' → '.join(plan)}")
@@ -143,6 +154,7 @@ def planner_node(state):
     return {
         "plan": plan,
         "current_step": 0,
+        "iteration_count": state.get("iteration_count", 0),
         "task_status": "executing",
     }
 

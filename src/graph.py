@@ -22,23 +22,32 @@ from agents import (
 
 
 # ==========================================
-# Deterministic Routing
+# Deterministic Routing (اصلاح شده و ایمن)
 # ==========================================
 
 def route_to_next_step(state):
-    plan = state.get("plan", [])
+    # گرفتن برنامه با یک مقدار پیش‌فرض مطمئن
+    plan = state.get("plan", ["researcher", "coder", "reviewer"])
     current_step = state.get("current_step", 0)
     iteration = state.get("iteration_count", 0)
 
-    if iteration >= 8 or current_step >= len(plan):
+    # 1. کنترل حد مجاز تکرار برای جلوگیری از حلقه بینهایت
+    if iteration >= 8:
+        print("⚠️ Maximum iterations reached. Ending workflow.")
         return "END"
 
+    # 2. بررسی انتهای صف نقشه
+    if current_step >= len(plan):
+        return "END"
+
+    # 3. دریافت ایجنت بعدی
     next_agent = plan[current_step]
+
+    # اگر اسم ایجنت معتبر بود آن را برگردان
     if next_agent in ["researcher", "coder", "reviewer"]:
         return next_agent
 
     return "END"
-
 
 # ==========================================
 # Build Graph
