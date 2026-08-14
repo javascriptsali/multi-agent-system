@@ -121,7 +121,7 @@ with tab_full:
             with st.spinner("Executing Plan-and-Execute Graph (Planner ➔ Researcher ➔ Coder ➔ Reviewer)..."):
                 try:
                     final_state = run_full_graph(root_task)
-
+                    st.write("🔍 Keys in Final State:", list(final_state.keys()))
                     if final_state.get("researcher_output"):
                         with st.expander("🔎 Step 1: Researcher Findings", expanded=True):
                             st.markdown(final_state["researcher_output"])

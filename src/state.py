@@ -1,7 +1,7 @@
 """
 Shared State for the Multi-Agent System (Plan-and-Execute architecture).
 """
-from typing import Annotated, Literal, TypedDict
+from typing import Annotated, Literal, Optional, TypedDict
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
@@ -20,6 +20,7 @@ class MultiAgentState(TypedDict):
         last_output: Output of the last executed agent (context passing)
         researcher_output: Pure research findings
         coder_output: Pure Python code output
+        reviewer_output: Optional[str]
     """
     messages: Annotated[list[BaseMessage], add_messages]
     current_task: str
@@ -30,3 +31,4 @@ class MultiAgentState(TypedDict):
     last_output: str
     researcher_output: str
     coder_output: str
+    reviewer_output: Optional[str]

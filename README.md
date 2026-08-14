@@ -9,6 +9,8 @@
 
 ---
 
+# [Live Demo](https://multi-agent-system-de6abtlozifgbctljhuy93.streamlit.app/)
+
 ## 🌟 Overview
 
 A robust, production-ready **Multi-Agent AI Pipeline** built with **LangGraph**, **Groq (openai/gpt-oss-20b)**, and **DuckDuckGo Search**. The system uses a **Plan-and-Execute** architecture where an AI Planner dynamically breaks down tasks and delegates them to specialized agents (Researcher, Coder, and Reviewer) to produce high-quality, peer-reviewed python code.
@@ -167,6 +169,10 @@ multi-agent-system/
 ```bash
 ChatGroq(model="openai/gpt-oss-20b", request_timeout=60.0, max_retries=3)
 ```
+# Future
+
+- **"In the upcoming iteration, I am implementing an automated feedback loop where code will continuously route between Coder and Reviewer until it passes all syntax, logic, and execution audits."**
+
 # 🤝 Contributing
 - **Contributions are welcome! Please feel free to submit a Pull Request.**
 

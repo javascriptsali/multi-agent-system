@@ -26,29 +26,27 @@ from agents import (
 # ==========================================
 
 def route_to_next_step(state):
-    # گرفتن برنامه با یک مقدار پیش‌فرض مطمئن
-    plan = state.get("plan", ["researcher", "coder", "reviewer"])
+    plan = state.get("plan", [])
     current_step = state.get("current_step", 0)
     iteration = state.get("iteration_count", 0)
 
-    # 1. کنترل حد مجاز تکرار برای جلوگیری از حلقه بینهایت
+    print(f"\n🔍 [DEBUG ROUTER] Plan: {plan} | Current Step: {current_step} | Iteration: {iteration}")
+
     if iteration >= 8:
-        print("⚠️ Maximum iterations reached. Ending workflow.")
+        print("🛑 [DEBUG ROUTER] Stopped due to max iterations!")
         return "END"
 
-    # 2. بررسی انتهای صف نقشه
     if current_step >= len(plan):
+        print(f"🛑 [DEBUG ROUTER] Step {current_step} reached end of plan (Length: {len(plan)}). Ending!")
         return "END"
 
-    # 3. دریافت ایجنت بعدی
     next_agent = plan[current_step]
-
-    # اگر اسم ایجنت معتبر بود آن را برگردان
+    print(f"👉 [DEBUG ROUTER] Next Agent to execute: {next_agent}")
+    
     if next_agent in ["researcher", "coder", "reviewer"]:
         return next_agent
 
     return "END"
-
 # ==========================================
 # Build Graph
 # ==========================================

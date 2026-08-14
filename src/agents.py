@@ -236,6 +236,9 @@ def researcher_node(state):
 
 
 def coder_node(state):
+    print("\n--------------------------------------------------")
+    print(f"⚙️ [DEBUG CODER] Starting node. Initial current_step: {state.get('current_step', 0)}")
+    
     main_task = state.get("current_task") or state.get("task", "")
     research_context = state.get("researcher_output", "")
 
@@ -243,7 +246,6 @@ def coder_node(state):
         f"Implement a complete Python script or solution that fulfills the requirement: '{main_task}'."
     )
 
-    # FIX: Pass 'coder_instruction' properly instead of raw 'main_task'
     response_text = run_agent_with_context(
         create_coder_llm(),
         CODER_PROMPT,
@@ -252,6 +254,11 @@ def coder_node(state):
     )
 
     formatted_message = f"[Coder]\n{response_text}"
+
+    print(f"✅ [DEBUG CODER] Execution finished.")
+    print(f"📊 [DEBUG CODER] Plan in State: {state.get('plan', [])}")
+    print(f"➡️ [DEBUG CODER] Step after increment will be: {state.get('current_step', 0) + 1}")
+    print("--------------------------------------------------\n")
 
     return {
         "messages": [AIMessage(content=formatted_message)],
@@ -265,12 +272,19 @@ def coder_node(state):
 def reviewer_node(state):
     main_task = state.get("current_task") or state.get("task", "")
     code_context = state.get("coder_output") or state.get("last_output", "")
+    research_context = state.get("researcher_output", "")
+
+    # ترکیب بافت برای ارزیابی همه‌جانبه توسط Reviewer
+    full_context = f"--- RESEARCH FINDINGS ---\n{research_context}\n\n--- CODE TO REVIEW ---\n{code_context}"
 
     response_text = run_agent_with_context(
         create_reviewer_llm(),
         REVIEWER_PROMPT,
-        agent_specific_task=f"Review and optimize code for: {main_task}",
-        context=code_context,
+        agent_specific_task=(
+            f"Review the provided Python code for the task: '{main_task}'. "
+            f"Audit for syntax errors (e.g. missing symbols/imports), correctness, and optimization."
+        ),
+        context=full_context,
     )
 
     formatted_message = f"[Reviewer]\n{response_text}"
@@ -281,5 +295,5 @@ def reviewer_node(state):
         "reviewer_output": response_text,
         "current_step": state.get("current_step", 0) + 1,
         "iteration_count": state.get("iteration_count", 0) + 1,
-        "task_status": "completed",
+        "task_status": "executing",  # وضعیت توسط Router تعیین شود نه هاردکد در نود
     }
