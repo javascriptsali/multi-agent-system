@@ -45,8 +45,11 @@ def get_agent_llm() -> ChatGroq:
 
 PLANNER_PROMPT = """You are a Task Planner. Given a user request, decide which agents should run in sequence.
 Available agents: researcher, coder, reviewer.
-Output ONLY a comma-separated list of agent names (e.g., researcher,coder,reviewer).
-No explanations, no extra characters."""
+
+RULES:
+1. If coding is required, ALWAYS include 'reviewer' after 'coder'.
+2. Output ONLY a comma-separated list of agent names (e.g., researcher,coder,reviewer).
+3. No extra text or explanations."""
 
 RESEARCHER_PROMPT = """You are a Research Specialist.
 Your task is to search the web and summarize key best practices based on search findings for the specified user request.
@@ -75,7 +78,9 @@ Your job is to write high-quality, executable Python code based strictly on the 
 STRICT INSTRUCTIONS:
 1. Output ONLY executable Python code inside a markdown code block (```python ... ```).
 2. DO NOT include any conversational intro/outro or explanations outside the code block.
-3. DO NOT write research findings, sources, or self-reviews."""
+3. DO NOT write research findings, sources, or self-reviews.
+4. Write Python code that directly implements or utilizes the topic requested by the user.
+"""
 
 REVIEWER_PROMPT = """You are a Senior Code Reviewer.
 Your task is to review the provided Python code for bugs, type safety, performance, and style issues.
@@ -225,6 +230,11 @@ def researcher_node(state):
 def coder_node(state):
     main_task = state.get("current_task") or state.get("task", "")
     research_context = state.get("researcher_output", "")
+
+    coder_instruction = (
+        f"Implement a functional Python script or solution that satisfies the core requirements of: '{main_task}'. "
+        f"Use the technical facts provided in the research context if relevant."
+    )
 
     response_text = run_agent_with_context(
         create_coder_llm(),
