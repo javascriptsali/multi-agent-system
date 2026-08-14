@@ -16,8 +16,8 @@ from tools import (
 
 load_dotenv()
 
-PLANNER_MODEL = "openai/gpt-oss-20b"
-AGENT_MODEL = "openai/gpt-oss-20b"
+PLANNER_MODEL = "llama-3.1-8b-instant"
+AGENT_MODEL = "llama-3.1-8b-instant"
 
 
 def get_planner_llm() -> ChatGroq:
