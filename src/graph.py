@@ -81,7 +81,7 @@ def build_multi_agent_graph():
 
 
 # ==========================================
-# Test Function
+# Test Function (CLI)
 # ==========================================
 
 def test_agent(agent_name: str):
@@ -136,7 +136,7 @@ def test_agent(agent_name: str):
         try:
             node_func = nodes_map[agent_name]
             result = node_func(initial_state)
-            last_output = result.get("last_output", "")
+            last_output = result.get("last_output", "") or result.get("reviewer_output", "")
 
             if agent_name == "coder" and last_output:
                 with open("last_coder_output.txt", "w", encoding="utf-8") as f:
@@ -191,50 +191,78 @@ if __name__ == "__main__":
     args = parser.parse_args()
     test_agent(args.test)
 
+
 # =========================================================
 # Wrapper Functions for Streamlit / External Calling
 # =========================================================
 
-
 def run_agent_test(agent_name: str, task: str) -> str:
     """Executes a single agent test and returns the output as a string."""
-    if agent_name == "researcher":
-        from src.agents import researcher_node
+    # استانداردسازی کلیدهای ورودی با متغیرهای MultiAgentState
+    initial_state = {
+        "messages": [("user", task)],
+        "task": task,
+        "current_task": task,
+        "iteration_count": 0,
+        "current_step": 0,
+        "last_output": "",
+        "researcher_output": "",
+        "coder_output": "",
+    }
 
-        state = {"messages": [("user", task)], "task": task}
-        result = researcher_node(state)
-        return result.get("researcher_output", "No output generated.")
+    if agent_name == "researcher":
+        result = researcher_node(initial_state)
+        return result.get("researcher_output") or result.get("last_output") or "No output generated."
 
     elif agent_name == "coder":
-        from src.agents import coder_node
-
-        state = {"messages": [("user", task)], "task": task}
-        result = coder_node(state)
-        return result.get("coder_output", "No output generated.")
+        result = coder_node(initial_state)
+        code_out = result.get("coder_output") or result.get("last_output") or "No output generated."
+        # حفظ آخرین کد در فایل برای تست‌های مستقل
+        if code_out and code_out != "No output generated.":
+            try:
+                with open("last_coder_output.txt", "w", encoding="utf-8") as f:
+                    f.write(code_out)
+            except Exception:
+                pass
+        return code_out
 
     elif agent_name == "reviewer":
-        from src.agents import reviewer_node
+        # دریافت آخرین کد کدر یا خواندن از فایل
+        try:
+            with open("last_coder_output.txt", "r", encoding="utf-8") as f:
+                saved_code = f.read().strip()
+            initial_state["coder_output"] = saved_code
+            initial_state["last_output"] = saved_code
+        except FileNotFoundError:
+            initial_state["coder_output"] = "# Dummy Code for Review\ndef main():\n    print('Hello World')"
+            initial_state["last_output"] = initial_state["coder_output"]
 
-        state = {"messages": [("user", task)], "task": task}
-        result = reviewer_node(state)
-        return result.get("reviewer_output", "No output generated.")
+        result = reviewer_node(initial_state)
+        return (
+            result.get("reviewer_output")
+            or result.get("review")
+            or result.get("last_output")
+            or "No output generated."
+        )
 
     return "Invalid agent name specified."
 
 
 def run_full_graph(task: str) -> dict:
     """Executes the full LangGraph pipeline and returns the final state dict."""
-    # ۱. ابتدا گراف را می‌سازیم و در متغیر app می‌ریزیم
     app = build_multi_agent_graph()
 
-    # ۲. وضعیت اولیه را تعریف می‌کنیم
     initial_state = {
         "task": task,
+        "current_task": task,
         "plan": [],
         "current_step": 0,
+        "iteration_count": 0,
         "messages": [("user", task)],
+        "last_output": "",
+        "researcher_output": "",
+        "coder_output": "",
     }
 
-    # ۳. گراف را اجرا می‌کنیم
     final_state = app.invoke(initial_state)
     return final_state

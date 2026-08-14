@@ -16,8 +16,9 @@ from tools import (
 
 load_dotenv()
 
-PLANNER_MODEL = "llama-3.1-8b-instant"
-AGENT_MODEL = "llama-3.1-8b-instant"
+# Updated model names based on Groq recommendations
+PLANNER_MODEL = "gpt-oss-20b"
+AGENT_MODEL = "gpt-oss-20b"
 
 
 def get_planner_llm() -> ChatGroq:
@@ -48,7 +49,7 @@ Output ONLY a comma-separated list of agent names (e.g., researcher,coder,review
 No explanations, no extra characters."""
 
 RESEARCHER_PROMPT = """You are a Research Specialist.
-Your task is to search the web and summarize key best practices based on search findings.
+Your task is to search the web and summarize key best practices based on search findings for the specified user request.
 
 STRICT INSTRUCTIONS:
 1. First, call the search_web tool to find accurate information.
@@ -69,7 +70,7 @@ RULES:
 - Maximum 3 sources."""
 
 CODER_PROMPT = """You are an Expert Python Developer.
-Your job is to write high-quality, executable Python code based on the user's request and research findings.
+Your job is to write high-quality, executable Python code based strictly on the user's explicit request and research context.
 
 STRICT INSTRUCTIONS:
 1. Output ONLY executable Python code inside a markdown code block (```python ... ```).
@@ -108,12 +109,10 @@ def create_researcher_llm():
 
 
 def create_coder_llm():
-    # Coder LLM without tools to force direct Python code generation
     return get_agent_llm()
 
 
 def create_reviewer_llm():
-    # Reviewer LLM without tools to prevent endless tool execution loops
     return get_agent_llm()
 
 
@@ -123,7 +122,7 @@ def create_reviewer_llm():
 
 def planner_node(state):
     llm = get_planner_llm()
-    task = state.get("current_task", "")
+    task = state.get("current_task") or state.get("task", "")
 
     response = llm.invoke([
         SystemMessage(content=PLANNER_PROMPT),
@@ -151,10 +150,10 @@ def planner_node(state):
 # ==========================================
 
 def run_agent_with_context(llm, system_prompt, agent_specific_task, context="", max_iterations=3):
-    user_content = f"### Task:\n{agent_specific_task}"
+    user_content = f"### Main Task:\n{agent_specific_task}"
     
     if context:
-        user_content += f"\n\n### Input Context:\n```text\n{context.strip()}\n```"
+        user_content += f"\n\n### Additional Context / Previous Output:\n```text\n{context.strip()}\n```"
 
     messages = [
         SystemMessage(content=system_prompt),
@@ -202,14 +201,14 @@ def run_agent_with_context(llm, system_prompt, agent_specific_task, context="", 
 # ==========================================
 
 def researcher_node(state):
-    task = "Search for best practices and python guidance for the requested task."
-    context = state.get("current_task", "")
+    # Pass user's main task as the actual task
+    main_task = state.get("current_task") or state.get("task", "")
 
     response_text = run_agent_with_context(
         create_researcher_llm(),
         RESEARCHER_PROMPT,
-        agent_specific_task=task,
-        context=context,
+        agent_specific_task=main_task,
+        context="",
     )
 
     formatted_message = f"[Researcher]\n{response_text}"
@@ -224,15 +223,14 @@ def researcher_node(state):
 
 
 def coder_node(state):
-    task = "Write clean Python implementation based on user prompt and research guidelines."
-    # Use researcher output as context if available, otherwise last_output or task
-    context = state.get("researcher_output") or state.get("last_output") or state.get("current_task", "")
+    main_task = state.get("current_task") or state.get("task", "")
+    research_context = state.get("researcher_output", "")
 
     response_text = run_agent_with_context(
         create_coder_llm(),
         CODER_PROMPT,
-        agent_specific_task=task,
-        context=context,
+        agent_specific_task=main_task, # Explicit user prompt passed here!
+        context=research_context,
     )
 
     formatted_message = f"[Coder]\n{response_text}"
@@ -247,15 +245,14 @@ def coder_node(state):
 
 
 def reviewer_node(state):
-    task = "Review the provided Python code and output a refactored version."
-    # Pass ONLY the code outputted by Coder to avoid hallucinations
-    context = state.get("coder_output") or state.get("last_output", "")
+    main_task = state.get("current_task") or state.get("task", "")
+    code_context = state.get("coder_output") or state.get("last_output", "")
 
     response_text = run_agent_with_context(
         create_reviewer_llm(),
         REVIEWER_PROMPT,
-        agent_specific_task=task,
-        context=context,
+        agent_specific_task=f"Review and optimize code for: {main_task}",
+        context=code_context,
     )
 
     formatted_message = f"[Reviewer]\n{response_text}"
@@ -263,6 +260,7 @@ def reviewer_node(state):
     return {
         "messages": [AIMessage(content=formatted_message)],
         "last_output": response_text,
+        "reviewer_output": response_text, # Key explicitly added here!
         "current_step": state.get("current_step", 0) + 1,
         "iteration_count": state.get("iteration_count", 0) + 1,
         "task_status": "completed",
