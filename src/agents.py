@@ -47,7 +47,7 @@ PLANNER_PROMPT = """You are a Task Planner. Given a user request, decide which a
 Available agents: researcher, coder, reviewer.
 
 RULES:
-1. If coding is required, ALWAYS include 'reviewer' after 'coder'.
+1. ALWAYS include 'reviewer' after 'coder'.
 2. Output ONLY a comma-separated list of agent names (e.g., researcher,coder,reviewer).
 3. No extra text or explanations."""
 
