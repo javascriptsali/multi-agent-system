@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Powered-orange.svg)](https://github.com/langchain-ai/langgraph)
-[![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-red.svg)](https://groq.com/)
+[![Groq GPT-OSS-20B](https://img.shields.io/badge/Groq-OpenAI%20GPT--OSS--20B-f05138.svg)](https://groq.com/)
 
 > 🚀 **An autonomous multi-agent system where specialized AI agents (Researcher, Coder, Reviewer) collaborate to solve complex software engineering tasks.**
 
@@ -87,7 +87,7 @@ The system is powered by a deterministic state-graph architecture managed by **L
 |       Component      |           Technology           |
 |----------------------|--------------------------------|
 | **Orchestration**    | LangGraph (StateGraph)         |
-| **LLM Provider**     | Groq API (Llama 3.3 70B)       |
+| **LLM Provider**     | Groq API (openai/gpt-oss-20b)  |
 | **Agent Framework**  | LangChain Core                 |
 | **Web Search**       | DuckDuckGo (ddgs)              |
 | **Code Analysis**    | Python `ast` module            |
