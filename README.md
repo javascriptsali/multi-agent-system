@@ -177,7 +177,7 @@ ChatGroq(model="llama-3.1-8b-instant", request_timeout=60.0, max_retries=3)
 # 📧 Contact
 
 - **Saleh Bakhtiyari-[javascriptsali@gmail.com](javascriptsali@gmail.com)**
-- **[Project Link]:(https://github.com/javascriptsali/multi-agent-system.git)**
+- **[Project Link](https://github.com/javascriptsali/multi-agent-system.git)**
 
 # ⭐ Support
 
