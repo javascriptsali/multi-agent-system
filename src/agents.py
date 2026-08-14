@@ -16,7 +16,6 @@ from tools import (
 
 load_dotenv()
 
-# Updated model names based on Groq recommendations
 PLANNER_MODEL = "openai/gpt-oss-20b"
 AGENT_MODEL = "openai/gpt-oss-20b"
 
@@ -47,16 +46,16 @@ PLANNER_PROMPT = """You are a Task Planner. Given a user request, decide which a
 Available agents: researcher, coder, reviewer.
 
 RULES:
-1. ALWAYS include 'reviewer' after 'coder'.
+1. Unless the request is exclusively text search, ALWAYS include all 3 agents in order: researcher,coder,reviewer.
 2. Output ONLY a comma-separated list of agent names (e.g., researcher,coder,reviewer).
-3. No extra text or explanations."""
+3. No extra text, markdown, or explanations."""
 
 RESEARCHER_PROMPT = """You are a Research Specialist.
-Your task is to search the web and summarize key best practices based on search findings for the specified user request.
+Your task is to search the web and summarize key best practices based on search findings.
 
 STRICT INSTRUCTIONS:
-1. First, call the search_web tool to find accurate information.
-2. After receiving search results, summarize them in EXACTLY this format:
+1. Call the search_web tool to fetch accurate information.
+2. Summarize findings in EXACTLY this format:
 
 ### Summary of Best Practices:
 • [Point 1]
@@ -64,23 +63,21 @@ STRICT INSTRUCTIONS:
 • [Point 3]
 
 ### Sources:
-1. [Source 1]
-2. [Source 2]
+1. [Source Domain/URL 1]
+2. [Source Domain/URL 2]
 
 RULES:
 - NEVER leave 'Summary of Best Practices' empty.
-- NEVER write Python code.
-- Maximum 2 sources."""
+- ALWAYS include the '### Sources:' section with web domains/URLs found.
+- NEVER write Python code."""
 
 CODER_PROMPT = """You are an Expert Python Developer.
-Your job is to write high-quality, executable Python code based strictly on the user's explicit request and research context.
+Your job is to write high-quality, executable Python code based strictly on the user request and research context provided.
 
 STRICT INSTRUCTIONS:
 1. Output ONLY executable Python code inside a markdown code block (```python ... ```).
 2. DO NOT include any conversational intro/outro or explanations outside the code block.
-3. DO NOT write research findings, sources, or self-reviews.
-4. Write Python code that directly implements or utilizes the topic requested by the user.
-"""
+3. DO NOT write research findings or web scraper scripts unless explicitly requested."""
 
 REVIEWER_PROMPT = """You are a Senior Code Reviewer.
 Your task is to review the provided Python code for bugs, type safety, performance, and style issues.
@@ -88,7 +85,7 @@ Your task is to review the provided Python code for bugs, type safety, performan
 STRICT INSTRUCTIONS:
 1. DO NOT summarize research findings or invent sources.
 2. Focus strictly on the Python code provided in the context.
-3. Provide EXACTLY one code review and one refactored python code block.
+3. Provide EXACTLY one code review analysis and one refactored python code block.
 
 FORMAT REQUIRED:
 ### Code Review Analysis
@@ -138,7 +135,7 @@ def planner_node(state):
     valid_agents = {"researcher", "coder", "reviewer"}
     plan = [a for a in plan_text.split(",") if a in valid_agents]
 
-    if not plan:
+    if not plan or len(plan) < 2:
         plan = ["researcher", "coder", "reviewer"]
 
     print(f"📋 Generated Plan: {' → '.join(plan)}")
@@ -156,7 +153,7 @@ def planner_node(state):
 
 def run_agent_with_context(llm, system_prompt, agent_specific_task, context="", max_iterations=3):
     user_content = f"### Main Task:\n{agent_specific_task}"
-    
+
     if context:
         user_content += f"\n\n### Additional Context / Previous Output:\n```text\n{context.strip()}\n```"
 
@@ -206,13 +203,12 @@ def run_agent_with_context(llm, system_prompt, agent_specific_task, context="", 
 # ==========================================
 
 def researcher_node(state):
-    # Pass user's main task as the actual task
     main_task = state.get("current_task") or state.get("task", "")
 
     response_text = run_agent_with_context(
         create_researcher_llm(),
         RESEARCHER_PROMPT,
-        agent_specific_task=main_task,
+        agent_specific_task=f"Research best practices and sources for: {main_task}",
         context="",
     )
 
@@ -232,14 +228,14 @@ def coder_node(state):
     research_context = state.get("researcher_output", "")
 
     coder_instruction = (
-        f"Implement a functional Python script or solution that satisfies the core requirements of: '{main_task}'. "
-        f"Use the technical facts provided in the research context if relevant."
+        f"Implement a complete Python script or solution that fulfills the requirement: '{main_task}'."
     )
 
+    # FIX: Pass 'coder_instruction' properly instead of raw 'main_task'
     response_text = run_agent_with_context(
         create_coder_llm(),
         CODER_PROMPT,
-        agent_specific_task=main_task, # Explicit user prompt passed here!
+        agent_specific_task=coder_instruction,
         context=research_context,
     )
 
@@ -270,7 +266,7 @@ def reviewer_node(state):
     return {
         "messages": [AIMessage(content=formatted_message)],
         "last_output": response_text,
-        "reviewer_output": response_text, # Key explicitly added here!
+        "reviewer_output": response_text,
         "current_step": state.get("current_step", 0) + 1,
         "iteration_count": state.get("iteration_count", 0) + 1,
         "task_status": "completed",

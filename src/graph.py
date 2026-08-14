@@ -81,7 +81,7 @@ def build_multi_agent_graph():
 
 
 # ==========================================
-# Test Function (CLI)
+# Test Function (CLI Execution for VSCode)
 # ==========================================
 
 def test_agent(agent_name: str):
@@ -93,7 +93,7 @@ def test_agent(agent_name: str):
         "researcher": "Search the web for 3 best practices of Laplace transform in Python and return summary with sources.",
         "coder": "Write a Python function to compute Laplace transform using sympy.",
         "reviewer": "Review the Python function for Laplace transform.",
-        "all": "Write a Python function that calculates Laplace transform based on best research practices.",
+        "all": "Research best practices for Laplace transform in Python, write a clean function using SymPy, and review the code.",
     }
 
     task = tasks.get(agent_name, tasks["all"])
@@ -136,7 +136,7 @@ def test_agent(agent_name: str):
         try:
             node_func = nodes_map[agent_name]
             result = node_func(initial_state)
-            last_output = result.get("last_output", "") or result.get("reviewer_output", "")
+            last_output = result.get("last_output", "") or result.get("reviewer_output", "") or result.get("researcher_output", "")
 
             if agent_name == "coder" and last_output:
                 with open("last_coder_output.txt", "w", encoding="utf-8") as f:
@@ -198,7 +198,6 @@ if __name__ == "__main__":
 
 def run_agent_test(agent_name: str, task: str) -> str:
     """Executes a single agent test and returns the output as a string."""
-    # استانداردسازی کلیدهای ورودی با متغیرهای MultiAgentState
     initial_state = {
         "messages": [("user", task)],
         "task": task,
@@ -217,7 +216,6 @@ def run_agent_test(agent_name: str, task: str) -> str:
     elif agent_name == "coder":
         result = coder_node(initial_state)
         code_out = result.get("coder_output") or result.get("last_output") or "No output generated."
-        # حفظ آخرین کد در فایل برای تست‌های مستقل
         if code_out and code_out != "No output generated.":
             try:
                 with open("last_coder_output.txt", "w", encoding="utf-8") as f:
@@ -227,14 +225,13 @@ def run_agent_test(agent_name: str, task: str) -> str:
         return code_out
 
     elif agent_name == "reviewer":
-        # دریافت آخرین کد کدر یا خواندن از فایل
         try:
             with open("last_coder_output.txt", "r", encoding="utf-8") as f:
                 saved_code = f.read().strip()
             initial_state["coder_output"] = saved_code
             initial_state["last_output"] = saved_code
         except FileNotFoundError:
-            initial_state["coder_output"] = "# Dummy Code for Review\ndef main():\n    print('Hello World')"
+            initial_state["coder_output"] = "import sympy as sp\ndef laplace(f, t, s):\n    return sp.laplace_transform(f, t, s)"
             initial_state["last_output"] = initial_state["coder_output"]
 
         result = reviewer_node(initial_state)
